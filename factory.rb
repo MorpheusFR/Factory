@@ -23,8 +23,7 @@ class Factory
       end
 
       class_eval(&block) if block_given?
-      # redefinition of the method new, so that the heresy did not happen
-      # struct_class is a subclass of Factory , so we had to redefine method :new
+      # my_struct_class is a subclass of Factory , so we had to redefine method :new
       my_struct_class.define_singleton_method(:new, Object.method(:new))
       class_name ? const_set(class_name.to_s, my_struct_class) : my_struct_class
     end
@@ -52,13 +51,14 @@ p "Struct_vs_Customer: \n ", CustomerStruct.instance_methods - Customer.instance
 puts customer
 puts customerStruct
 puts "_________________________________________________________________________"
-p customer.ancestors
-p Customer.ancestors
+p customer.class.ancestors
+p Customer.class.ancestors
 puts "_________________________________________________________________________"
 puts "********************** Instance_methods *****************: \t"
-p customer.instance_methods
+p customer.class.instance_methods
 
 puts customer['first_name']
 puts customer[:first_name]
 p customer.full_name_and_address
+p customerStruct.full_name_and_address
 p customer.to_s
