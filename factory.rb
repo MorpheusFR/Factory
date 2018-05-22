@@ -30,6 +30,7 @@ class Factory
   end
 end
 
+# ----------------------------------TEST----------------------------------------
 Customer = Factory.new(:first_name, :last_name, :zip) do
   def full_name_and_address
     "#{@first_name} #{@last_name}, #{@zip}"
@@ -60,5 +61,4 @@ p customer.class.instance_methods
 puts customer['first_name']
 puts customer[:first_name]
 p customer.full_name_and_address
-p customerStruct.full_name_and_address
 p customer.to_s
