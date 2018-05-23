@@ -25,6 +25,8 @@ class Factory
         end
       end
 
+
+
       my_struct_class = Class.new(self) do
         attr_accessor(*attrs, &block)
 
