@@ -1,43 +1,59 @@
 require_relative 'factory'
-
-Customer = Struct.new(:name, :address) do
-  def greeting
-    "Hello customer #{name}!"
+# ----------------------------------TEST----------------------------------------
+Customer = Factory.new(:first_name, :last_name, :zip) do
+  def full_name_and_address
+    "#{@first_name} #{@last_name}, #{@zip}"
   end
 end
 
-dave = Customer.new("Dave", "123 Main")
-dave.name     #=> "Dave"
-dave.greeting #=> "Hello Dave!"
-
-Customer = Factory.new(:name, :address, :zip) do
-  def greeting
-    "Hello #{name}!"
+CustomerStruct = Struct.new(:first_name, :last_name, :zip) do
+  def full_name_and_address
+    "#{@first_name} #{@last_name}, #{@zip}"
   end
 end
+# -----------------------------------------------------------------------------
+# customer = Customer.new('Jon', 'Snow', 'North, Wall, Black Castle 7')
+# customerStruct = CustomerStruct.new('Jon', 'Snow', 'North, Wall, Black Castle 7')
+#
+puts "Methods ***************************************: \t"
+p "Struct_vs_Customer: \n ", CustomerStruct.instance_methods - Customer.instance_methods
 
-customer = Customer.new('Dave', '123 Main')
-puts customer.name === 'Dave'
-puts customer.greeting === 'Hello Dave!'
+# puts customer
+# puts customerStruct
+# puts "_________________________________________________________________________"
+# p customer.class.ancestors
+# p Customer.class.ancestors
+# puts "_________________________________________________________________________"
+# puts "********************** Instance_methods *****************: \t"
+# p customer.class.instance_methods
 
-Factory.new('Customer', :name, :address)
-customer = Factory::Customer.new("Dave", "123 Main")
-puts customer.address == "123 Main"
+# puts customer['first_name']
+# puts customer[:first_name]
+# p customer.full_name_and_address
+# p customer.to_s
+
+Customer = Factory.new(:name, :address, :zip)
 
 joe   = Customer.new("Joe Smith", "123 Maple, Anytown NC", 12345)
 joejr = Customer.new("Joe Smith", "123 Maple, Anytown NC", 12345)
-jane  = Customer.new("Jane Doe", "456 Elm, Anytown NC", 12345)
-
+jane  = Customer.new("Jane Doe", "456 Elm, Anytown NC", 99999)
 puts '_____________==_____________'
-puts joe == joejr #=> true
-puts !(joe == jane) #=> false
+
+p joe, joejr, jane
+puts joe == joejr
+puts joe == jane
+puts !(joe == jane)
 
 jeck = joe
 puts '_____________eql?_____________'
+# p joe, jeck, joejr
 puts joe.eql? jeck
 puts joe.eql? joejr
 
 puts '_____________[]_____________'
+puts joe[0]
+puts joe["name"]
+puts joe[:name]
 puts joe["name"] == "Joe Smith"  #=> "Joe Smith"
 puts joe[:name] == "Joe Smith"  #=> "Joe Smith"
 puts joe[0] == "Joe Smith"      #=> "Joe Smith"
@@ -51,6 +67,7 @@ puts joe.zip == 90210  #=> "90210"
 puts '_____________each_____________'
 arr = []
 joe.each {|x| arr.push(x) }
+puts joe.each
 puts arr === ["Luke", "123 Maple, Anytown NC", 90210]
 
 puts '_____________each_pair_____________'
@@ -61,31 +78,39 @@ puts arr[1] == "address => 123 Maple, Anytown NC"
 puts arr[2] == "zip => 90210"
 
 puts '_____________hash_____________'
-puts joe.hash
+puts joe.hash, joejr.hash, jane.hash
 
 puts '_____________to_s_____________'
-puts joe.to_s
+puts joe.to_s, joejr.to_s, jane.to_s
 
 puts '_____________length_____________'
-puts joe.length == 3
+puts joe.length #== 3
 
 puts '_____________members_____________'
+p joe.members
 puts joe.members === [:name, :address, :zip]
 
 puts '_____________select_____________'
 Lots = Factory.new(:a, :b, :c, :d, :e, :f)
 l = Lots.new(11, 22, 33, 44, 55, 66)
-puts l.select {|v| (v % 2).zero? } == [22, 44, 66] #=> [22, 44, 66]
+puts l.select {|value| (value % 2).zero? } == [22, 44, 66] #=> [22, 44, 66]
 
 puts '_____________size_____________'
 puts joe.size == 3
 
 puts '_____________to_a_____________'
+puts joe.to_a
 puts joe.to_a == ["Luke", "123 Maple, Anytown NC", 90210]
 
 puts '_____________to_h_____________'
 puts joe.to_h == {name: "Luke", address: "123 Maple, Anytown NC", zip: 90210}
 
+puts '_____________dig_____________'
+klass = Factory.new(:a)
+o = klass.new(klass.new({b: [1, 2, 3]}))
+p o.dig(:a, :a, :b, 0)              #=> 1
+p o.dig(:b, 0)                      #=> nil
+
 puts '_____________values_at_____________'
-puts joe.values_at(1...4) == ["Luke", "123 Maple, Anytown NC", 90210]
-puts joe.values_at(2, 3) == ["123 Maple, Anytown NC", 90210]
+smith = Customer.new("Jon Snow", 'North, Wall, Black Castle 7', 12345)
+p smith.values_at 0, 2 #=> ["Joe Smith", 12345]

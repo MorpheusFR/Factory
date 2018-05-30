@@ -4,28 +4,64 @@ class Factory
 
   class << self
     def new(*attrs, &block)
-      class_name = attrs.shift if attrs.first.is_a?(String)
+      class_name = attrs.shift if (attrs.first.is_a? String)
 
-      define_method :[] do |attribute|
-        if attribute.is_a? Numeric
-          send("#{attrs[attribute]}")
+      define_method :[] do |attr|
+        if attr.is_a? Numeric
+          raise IndexError unless instance_variables[attr.floor]
+          instance_variable_get("@#{members[attr]}")
+        elsif attr.is_a? Float
+          instance_variable_get("@#{members[attr.to_i]}")
         else
-          send(attribute)
+          raise NameError unless members.include?(attr.to_sym)
+          instance_variable_get("@#{attr}")
         end
       end
 
-      define_method :[]= do |key, value|
-        case key.class.name
-        when 'String', 'Symbol'
-          raise NameError unless attrs.include? key
-          send("#{key}=", value)
-        when 'Integer'
-          raise IndexError if key.abs > attrs.length - 1
-          send("#{attrs[key]}=", value)
+      define_method :[]= do |attr, value|
+        if attr.is_a? Integer
+          raise IndexError unless instance_variables[attr]
         end
+        raise NameError unless instance_variable_get("@#{attr}")
+        instance_variable_set("@#{attr}", value)
       end
 
+      define_method :to_h do
+        attrs.zip(values).to_h
+      end
 
+      define_method :length do
+        attrs.length
+      end
+      alias_method :size, :length
+
+      define_method :members do
+        attrs
+      end
+
+      define_method :each do
+        values.each(&block)
+      end
+
+      define_method :each_pair do |&name_block|
+        to_h.each_pair(&name_block)
+      end
+
+      define_method :to_a do
+        instance_variables.map { |i| instance_variable_get(i) }
+      end
+      alias_method :values, :to_a
+
+      define_method :dig do |*args|
+        to_h.dig(*args)
+      end
+
+      define_method :values_at do |*indexes|
+        indexes.map do |index|
+          raise IndexError unless instance_variables[index]
+          to_a[index]
+        end
+      end
 
       my_struct_class = Class.new(self) do
         attr_accessor(*attrs, &block)
@@ -36,50 +72,8 @@ class Factory
       end
 
       class_eval(&block) if block_given?
-      # my_struct_class is a subclass of Factory , so we had to redefine method :new
       my_struct_class.define_singleton_method(:new, Object.method(:new))
       class_name ? const_set(class_name.to_s, my_struct_class) : my_struct_class
     end
   end
 end
-
-# ----------------------------------TEST----------------------------------------
-Customer = Factory.new(:first_name, :last_name, :zip) do
-  def full_name_and_address
-    "#{@first_name} #{@last_name}, #{@zip}"
-  end
-end
-
-CustomerStruct = Struct.new(:first_name, :last_name, :zip) do
-  def full_name_and_address
-    "#{@first_name} #{@last_name}, #{@zip}"
-  end
-end
-# -----------------------------------------------------------------------------
-customer = Customer.new('Jon', 'Snow', 'North, Wall, Black Castle 7')
-customerStruct = CustomerStruct.new('Jon', 'Snow', 'North, Wall, Black Castle 7')
-
-puts "Methods ***************************************: \t"
-p "Struct_vs_Customer: \n ", CustomerStruct.instance_methods - Customer.instance_methods
-
-puts customer
-puts customerStruct
-puts "_________________________________________________________________________"
-p customer.class.ancestors
-p Customer.class.ancestors
-puts "_________________________________________________________________________"
-puts "********************** Instance_methods *****************: \t"
-p customer.class.instance_methods
-
-puts customer['first_name']
-puts customer[:first_name]
-p customer.full_name_and_address
-p customer.to_s
-
-puts "********************** == *****************: \t"
-# Customer = Factory.new(:name, :address, :zip)
-joe   = Customer.new("Joe Smith", "123 Maple, Anytown NC", 12345)
-joejr = Customer.new("Joe Smith", "123 Maple, Anytown NC", 12345)
-jane  = Customer.new("Jane Doe", "456 Elm, Anytown NC", 12345)
-puts joe == joejr   #=> true
-puts joe == jane    #=> false
