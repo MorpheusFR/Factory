@@ -26,6 +26,14 @@ class Factory
         instance_variable_set("@#{attr}", value)
       end
 
+      define_method :== do |other|
+        (self.class == other.class) && (values == other.values)
+      end
+
+      define_method :eql? do |other|
+        (self.class == other.class) && (values.eql? other.values)
+      end
+
       define_method :to_h do
         attrs.zip(values).to_h
       end
@@ -43,8 +51,8 @@ class Factory
         values.each(&block)
       end
 
-      define_method :each_pair do |&name_block|
-        to_h.each_pair(&name_block)
+      define_method :each_pair do |&block|
+        to_h.each_pair(&block)
       end
 
       define_method :to_a do
