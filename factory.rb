@@ -22,8 +22,6 @@ class Factory
         if attr.is_a? Integer
           raise IndexError unless instance_variables[attr]
         end
-        # raise NameError unless instance_variable_get("@#{attr}")
-        # instance_variable_set("@#{attr}", value)
         raise NameError unless send(attr.to_s)
         send("#{attr}=", value)
       end
