@@ -9,12 +9,15 @@ class Factory
       define_method :[] do |attr|
         if attr.is_a? Numeric
           raise IndexError unless instance_variables[attr.floor]
-          instance_variable_get("@#{members[attr]}")
+          # instance_variable_get("@#{members[attr]}")
+          send("#{members[attr]}")
         elsif attr.is_a? Float
-          instance_variable_get("@#{members[attr.to_i]}")
+          # instance_variable_get("@#{members[attr.to_i]}")
+          send("#{members[attr.to_i]}")
         else
           raise NameError unless members.include?(attr.to_sym)
-          instance_variable_get("@#{attr}")
+          # instance_variable_get("@#{attr}")
+          send("#{attr}")
         end
       end
 
@@ -22,8 +25,10 @@ class Factory
         if attr.is_a? Integer
           raise IndexError unless instance_variables[attr]
         end
-        raise NameError unless instance_variable_get("@#{attr}")
-        instance_variable_set("@#{attr}", value)
+        # raise NameError unless instance_variable_get("@#{attr}")
+        # instance_variable_set("@#{attr}", value)
+        raise NameError unless send("#{attr}")
+        send("#{attr}=", value)
       end
 
       define_method :== do |other|
@@ -51,8 +56,8 @@ class Factory
         values.each(&block)
       end
 
-      define_method :each_pair do |&block|
-        to_h.each_pair(&block)
+      define_method :each_pair do |&ep_block|
+        to_h.each_pair(&ep_block)
       end
 
       define_method :to_a do
@@ -63,6 +68,11 @@ class Factory
       define_method :dig do |*args|
         to_h.dig(*args)
       end
+
+      define_method :inspect do
+        super().delete('@')
+      end
+      alias_method :to_s, :inspect
 
       define_method :values_at do |*indexes|
         indexes.map do |index|

@@ -1,7 +1,7 @@
 
 # frozen_string_literal: true
 
-require "./factory"
+require "./factory.rb"
 
 RSpec.describe 'Factory' do
   before do
