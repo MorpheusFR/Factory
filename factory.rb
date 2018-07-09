@@ -4,20 +4,17 @@ class Factory
 
   class << self
     def new(*attrs, &block)
-      class_name = attrs.shift if (attrs.first.is_a? String)
+      class_name = attrs.shift if attrs.first.is_a? String
 
       define_method :[] do |attr|
         if attr.is_a? Numeric
           raise IndexError unless instance_variables[attr.floor]
-          # instance_variable_get("@#{members[attr]}")
-          send("#{members[attr]}")
+          send(members[attr].to_s)
         elsif attr.is_a? Float
-          # instance_variable_get("@#{members[attr.to_i]}")
-          send("#{members[attr.to_i]}")
+          send(members[attr.to_i].to_s)
         else
           raise NameError unless members.include?(attr.to_sym)
-          # instance_variable_get("@#{attr}")
-          send("#{attr}")
+          send(attr.to_s)
         end
       end
 
@@ -27,7 +24,7 @@ class Factory
         end
         # raise NameError unless instance_variable_get("@#{attr}")
         # instance_variable_set("@#{attr}", value)
-        raise NameError unless send("#{attr}")
+        raise NameError unless send(attr.to_s)
         send("#{attr}=", value)
       end
 
